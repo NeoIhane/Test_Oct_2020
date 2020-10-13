@@ -11,6 +11,7 @@ public class Ball : MonoBehaviour
     Vector3 tmpPosition;
     [SerializeField]
     GameObject sphere;
+    public Color color { get; private set; }
     void Update()
     {
         if (target != null)
@@ -41,7 +42,12 @@ public class Ball : MonoBehaviour
     {
         gameObject.SetActive(enable);
     }
-    public void StartMoving(Transform target, float time)
+    
+    public Transform GetTarget()
+    {
+        return target;
+    }
+    public void ChangeToNewTarget(Transform target, float time)
     {
         tmpPosition = transform.position;
         this.target = target;
@@ -64,5 +70,6 @@ public class Ball : MonoBehaviour
     void SetColor(Color color)
     {
         sphere.GetComponent<Renderer>().material.SetColor("_Color", color);
+        this.color = color;
     }
 }
