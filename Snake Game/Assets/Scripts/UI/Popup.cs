@@ -8,6 +8,8 @@ public class Popup : MonoSingleton<Popup>
     [SerializeField]
     Animator animator;
     [SerializeField]
+    Text scoreTitleText;
+    [SerializeField]
     Text scoreText;
     [SerializeField]
     Button button;
@@ -23,9 +25,12 @@ public class Popup : MonoSingleton<Popup>
     {
         onPlayAgain = playAgain_callback;
     }
-    public void Show(int score)
+    public void Show(int score, bool isWin = false)
     {
         animator.SetTrigger("Show");
+        if (isWin) scoreTitleText.text = string.Format("Congratulation! :)", score.ToString());
+        else
+            scoreTitleText.text = "Your score";
         scoreText.text = score.ToString();
     }
     public void Hide()

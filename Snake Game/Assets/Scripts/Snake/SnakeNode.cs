@@ -24,6 +24,6 @@ public class SnakeNode : MonoBehaviour
     {
         Set(snakeNode.currentPosition, snakeNode.direction, blockSize);
     }
-    public virtual void SetSize(float size) { }
+    public virtual void SetSize(float size, bool relateDirection=false) { }
 }
 

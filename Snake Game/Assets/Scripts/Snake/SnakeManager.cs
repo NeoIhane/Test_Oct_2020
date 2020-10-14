@@ -59,7 +59,7 @@ public class SnakeManager : MonoBehaviour
     [SerializeField]
     float blockSize = 1;
     [SerializeField]
-    Map map = new Map(10, 10, 0, 0, 1);
+    Map map;
     #endregion
 
 
@@ -86,15 +86,17 @@ public class SnakeManager : MonoBehaviour
     }
     IEnumerator RandomApple()
     {
-        int randX = Random.Range(0, 10);
-        int randY = Random.Range(0, 10);
-        while (!CanPlaceApple(randX, randY))
+        Vector2[] blankAreas = map.GetBlankAreaList().ToArray();
+        if (blankAreas.Length <= 0)
         {
-            randX = Random.Range(0, 10);
-            randY = Random.Range(0, 10);
-            yield return null;
+            OnWin();
         }
-        apple.Place(new Vector3(randX, randY));
+        else
+        {
+            int rand = Random.Range(0, blankAreas.Length - 1);
+            apple.Place(blankAreas[rand]);
+        }
+        yield return null;
     }
     bool CanPlaceApple(int x, int y)
     {
@@ -130,6 +132,8 @@ public class SnakeManager : MonoBehaviour
     #region SnakeManage
     public void InitSnake()
     {
+        map.InitMap(10, 10, 0, 0, 1);
+
         startPositon[0] = snakeHead.transform.position;//head
         startPositon[1] = snakeBody.transform.position;//body
         startPositon[2] = snakeTail.transform.position;//tail
@@ -145,6 +149,7 @@ public class SnakeManager : MonoBehaviour
     }
     public void RestartSnake()
     {
+        snakeHead.transform.parent.position = Vector3.zero;
         int nBody = snakeNodes.Count;
         for (int i = 1; i < nBody; i++)
         {
@@ -164,7 +169,12 @@ public class SnakeManager : MonoBehaviour
         isSnakeDie = false;
 
         ResetScore();
-        
+
+        map.ResetMap();
+        map.SetValue(snakeHead.currentPosition, true);
+        map.SetValue(snakeBody.currentPosition, true);
+        map.SetValue(snakeTail.currentPosition, true);
+        map.UpdateMeshColor();
     }
     public void AddSnakeBodyNode()
     {
@@ -173,6 +183,8 @@ public class SnakeManager : MonoBehaviour
         node.name = "Boby_" + snakeNodes.Count.ToString();
         snakeNodes[snakeNodes.Count - 1].tag = "SnakeBody";
         snakeNodes.Add(node);
+        map.SetValue(node.currentPosition, true);
+        map.UpdateMeshColor();
     }
     IEnumerator MoveTo(Vector3 direction)
     {
@@ -192,7 +204,8 @@ public class SnakeManager : MonoBehaviour
             if (!isSnakeDie)
                 yield return null;
         }
-        
+
+        map.SetValue(snakeTail.currentPosition, false);
         snakeTail.Set(snakeNodes[0].currentPosition, snakeNodes[0].direction, blockSize);
         for (int i = 0; i < snakeNodes.Count; i++)
         {
@@ -206,6 +219,9 @@ public class SnakeManager : MonoBehaviour
             }
         }
         snakeHead.Set(snakeHead.nextPosition, direction, blockSize);
+        map.SetValue(snakeHead.currentPosition, true);
+
+        map.UpdateMeshColor();
 
         isMoveNext = false;
     }
@@ -229,8 +245,8 @@ public class SnakeManager : MonoBehaviour
         {
             gameState = GameState.EndGame;
             snakeHead.SetToStun();
-            StartCoroutine(PlayAnimStun(0.3f));
             isSnakeDie = true;
+            StartCoroutine(PlayAnimStun(0.3f));
         }
     }
     void OnHitWall()
@@ -239,8 +255,9 @@ public class SnakeManager : MonoBehaviour
         {
             gameState = GameState.EndGame;
             snakeHead.SetToStun();
-            StartCoroutine(PlayAnimStun(0.3f));
             isSnakeDie = true;
+            StartCoroutine(PlayAnimStun(0.3f));
+            
         }
     }
     void OnEatApple()
@@ -256,6 +273,11 @@ public class SnakeManager : MonoBehaviour
             StartCoroutine(RandomApple());
         }
     }
+    void OnWin()
+    {
+        gameState = GameState.EndGame;
+        Popup.Instance.Show(totalApple, true);
+    }
     #endregion
     #region SnakeAnim
     IEnumerator PlayAnimEatAppleToBody(float time)
@@ -269,7 +291,7 @@ public class SnakeManager : MonoBehaviour
         {
             timeCount += Time.deltaTime;
             float value = timeCount / time;
-
+          
             for (int i = 0; i < snakeNodes.Count; i++)
             {
                 float addScale = 1f;
@@ -277,7 +299,7 @@ public class SnakeManager : MonoBehaviour
                 float n = (float)(snakeNodes.Count - i) / (float)snakeNodes.Count;
                 float distance = Mathf.Abs(value - n);
 
-                snakeNodes[i].SetSize((addScale * bias) * (1 - distance));
+                snakeNodes[i].SetSize((addScale * bias) * (1 - distance), true);
             }
 
             yield return null;
@@ -285,7 +307,7 @@ public class SnakeManager : MonoBehaviour
         snakeHead.SetToNormal();
         for (int i = 0; i < snakeNodes.Count; i++)
         {
-            snakeNodes[i].transform.localScale = tmpScale;
+            snakeNodes[i].SetSize(1);
         }
     }
     IEnumerator PlayAnimStun(float time)
@@ -299,6 +321,16 @@ public class SnakeManager : MonoBehaviour
             snakeHead.transform.parent.position = newPos;
             yield return null;
         }
+        /*
+        Vector3 tmpPos = snakeHead.transform.parent.position;
+        timeCount = 0;
+        while (timeCount < time)
+        {
+            timeCount += Time.deltaTime;
+            float value = timeCount / time;
+            snakeHead.transform.parent.position = Vector3.Lerp(tmpPos, Vector3.zero, value);
+            yield return null;
+        }*/
         Popup.Instance.Show(totalApple);
     }
     public float punch(float amplitude, float value)

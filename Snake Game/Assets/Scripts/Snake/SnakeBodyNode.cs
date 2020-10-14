@@ -6,8 +6,11 @@ public class SnakeBodyNode : SnakeNode
 {
     [SerializeField]
     SpriteRenderer spriteRenderer;
-    public override void SetSize(float size)
+    public override void SetSize(float size, bool relateDirection = false)
     {
-        spriteRenderer.transform.localScale = new Vector3(1, 1, 1) + new Vector3(Mathf.Abs(direction.y) * size, Mathf.Abs(direction.x) * size, 1);
+        if (relateDirection)
+            spriteRenderer.transform.localScale = new Vector3(1, 1, 1) + new Vector3(Mathf.Abs(direction.y) * size, Mathf.Abs(direction.x) * size, 1);
+        else
+            spriteRenderer.transform.localScale = new Vector3(1, 1, 1);
     }
 }
