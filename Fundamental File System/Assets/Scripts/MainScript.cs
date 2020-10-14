@@ -3,27 +3,35 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using UnityEditor;
-
+using System;
 
 public class MainScript : MonoBehaviour
 {
     [SerializeField]
     PhotoStocks photoStocks;
+    [SerializeField]
+    Camera renderCamera;
 
-    string apppath = "";
+    [SerializeField]
+    string folderPath;
+    [SerializeField]
+    string fileName = "Photo.png";
+
     private void Awake()
     {
-        apppath = Application.dataPath;
+        folderPath = PlayerPrefs.GetString("folderPath", Application.dataPath);
+        if (!Directory.Exists(folderPath))
+        {
+            folderPath = Application.dataPath;
+            PlayerPrefs.SetString("folderPath", folderPath);
+        }
+        photoStocks.InitPool(3);
+        photoStocks.SetPath(folderPath);
+        photoStocks.ReloadPhotos();
     }
     void Start()
     {
-        folderPath = string.Format("{0}/Photos", apppath);
-#if UNITY_STANDALONE_WIN
-        folderPath = string.Format("{0}/Photos", Directory.GetParent(apppath));
-#endif
-        photoStocks.SetPath(folderPath);
-        photoStocks.ReloadPhotos();
-        
+
     }
 
     // Update is called once per frame
@@ -41,31 +49,113 @@ public class MainScript : MonoBehaviour
 
     void SaveImage()
     {
-        
-#if UNITY_EDITOR
-        string path = EditorUtility.SaveFilePanel("Save texture as PNG", folderPath, "test.png", "png");
-        if (path.Length != 0)
-        {
-            StartCoroutine(photoStocks.TakeScreenShot(path));
-        }
-#elif UNITY_STANDALONE_WIN
-        StartCoroutine(photoStocks.TakeScreenShot(folderPath + "/date.png"));
-#endif
+        StartCoroutine(photoStocks.TakeScreenShot(folderPath + "/" + fileName, renderCamera));
     }
     void ChangePath()
     {
 #if UNITY_EDITOR
-        string path = EditorUtility.OpenFolderPanel("Select Folder", folderPath, "");
-        if (path.Length != 0)
-        {
-            this.folderPath = path;  
-        }
+        //string path = EditorUtility.OpenFolderPanel("Select Folder", folderPath, "");
+        //if (path.Length != 0)
+        //{
+        //    folderPath = path;
+        //    PlayerPrefs.SetString("folderPath", folderPath);
+        //    photoStocks.SetPath(folderPath);
+        //}
 #endif 
-        photoStocks.ReloadPhotos();
+        selectPath = folderPath;
+        GetFolderData();
+        isShowFileDialogMockup = true;
+        //photoStocks.ReloadPhotos();
     }
+    bool isShowFileDialogMockup = false;
+    Rect FileDialogMockupRect = new Rect(0, 0, Screen.width, (int)(Screen.height * 0.8f));
+    DirectoryInfo selectDirectory;
+    DirectoryInfo parentDirectory;
+    DirectoryInfo[] sameLevelDirectory;
+    DirectoryInfo[] subDirectory;
+    string selectPath;
+    void GetFolderData()
+    {
+        parentDirectory = Directory.GetParent(selectPath);
+        sameLevelDirectory = parentDirectory.GetDirectories();
 
-    [SerializeField]
-    string folderPath;
+        string[] s = selectPath.Split('/');
 
-   
+        foreach (DirectoryInfo dir in sameLevelDirectory)
+        {
+            if (dir.Name == s[s.Length - 1] || dir.FullName == selectPath)
+            {
+                selectDirectory = dir;
+            }
+        }
+        subDirectory = selectDirectory.GetDirectories();
+    }
+    private void OnGUI()
+    {
+        if(isShowFileDialogMockup)
+        {
+            FileDialogMockupRect = GUILayout.Window(0, FileDialogMockupRect, FileDialogMockup, "Select Folder");
+        }
+    }
+    void FileDialogMockup(int windowID)
+    {
+        GUILayout.Label(selectPath);
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("box");
+        GUILayout.Label("ParentFolder");
+        GUILayout.BeginScrollView(new Vector2(0, 1));
+        if (GUILayout.Button(parentDirectory.Name))
+        {
+            selectPath = parentDirectory.FullName;
+            GetFolderData();
+        }
+        GUILayout.EndScrollView();
+        GUILayout.EndVertical();
+        GUILayout.BeginVertical("box");
+        GUILayout.Label("Folder");
+        GUILayout.BeginScrollView(new Vector2(0, 1));
+        for (int i = 0; i < sameLevelDirectory.Length; i++)
+        {
+            if(selectDirectory==sameLevelDirectory[i])
+            {
+                GUILayout.Label(sameLevelDirectory[i].Name,"box");
+            }
+            else if (GUILayout.Button(sameLevelDirectory[i].Name))
+            {
+                selectPath = sameLevelDirectory[i].FullName;
+                GetFolderData();
+            }
+        }
+        GUILayout.EndScrollView();
+        GUILayout.EndVertical();
+        GUILayout.BeginVertical("box");
+        GUILayout.Label("SubFolder");
+        GUILayout.BeginScrollView(new Vector2(0, 1));
+        for (int i = 0; i < subDirectory.Length; i++)
+        {
+            if (GUILayout.Button(subDirectory[i].Name))
+            {
+                selectPath = subDirectory[i].FullName;
+                GetFolderData();
+            }
+        }
+        GUILayout.EndScrollView();
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Cancel"))
+        {
+            isShowFileDialogMockup = false;
+        }
+        if (GUILayout.Button("Select"))
+        {
+            folderPath = selectPath;
+            isShowFileDialogMockup = false;
+
+            PlayerPrefs.SetString("folderPath", folderPath);
+            photoStocks.SetPath(folderPath);
+            photoStocks.ReloadPhotos();
+        }
+        GUILayout.EndHorizontal();
+    }
 }

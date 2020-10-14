@@ -11,10 +11,12 @@ public class PhotoStocks : MonoBehaviour
     string path = "";
     [SerializeField]
     Text pathText;
+    [SerializeField]
+    RenderTexture renderTexture;
 
     private void Start()
     {
-        InitPool(3);
+        //InitPool(3);
     }
     public void SetPath(string path)
     {
@@ -30,19 +32,31 @@ public class PhotoStocks : MonoBehaviour
             string[] filesNames = Directory.GetFiles(path,"*.png");
             for (int i = 0; i < filesNames.Length; i++)
             {
-                Debug.Log(filesNames[i]);
+                //Debug.Log(filesNames[i]);
                 StartCoroutine(GetTexture(filesNames[i]));
                 debug += "\nfilesNames[i] " + filesNames[i];
             }
         }else debug+= "\nReloadPhotos !Directory.Exists(path) " + path;
     }
     string debug = "Esc = Clear";
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            isDebugLog = !isDebugLog;
+        }
+    }
+    [SerializeField]
+    bool isDebugLog = false;
     void OnGUI()
     {
-        GUI.Label(new Rect(0, 0, Screen.width, Screen.height), debug);
-        if(Input.GetKeyDown(KeyCode.Escape))
+        if(isDebugLog)
         {
-            debug = "Esc = Clear";
+            GUI.Label(new Rect(0, 0, Screen.width, Screen.height), debug);
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                debug = "Esc = Clear";
+            }
         }
     }
     IEnumerator GetTexture(string filePath)
@@ -79,19 +93,20 @@ public class PhotoStocks : MonoBehaviour
             }
         }
     }
-   
-    public IEnumerator TakeScreenShot(string filePath)
+
+    public IEnumerator TakeScreenShot(string filePath, Camera renderCamera)
     {
         yield return new WaitForEndOfFrame();
-        debug += "\nTakeScreenShot "+filePath;
-        Camera.main.targetTexture = RenderTexture.GetTemporary(Screen.height, Screen.height, 16);
-        RenderTexture renderTexture = Camera.main.targetTexture;
+        debug += "\nTakeScreenShot " + filePath;
 
-        Texture2D texture = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.ARGB32, false);
-        Rect rect = new Rect(0, 0, renderTexture.width, renderTexture.height);
+        renderCamera.targetTexture = renderTexture;
+        RenderTexture.active = renderCamera.targetTexture;
+        renderCamera.Render();
+
+        Texture2D texture = new Texture2D(renderCamera.targetTexture.width, renderCamera.targetTexture.height, TextureFormat.ARGB32, false);
+        Rect rect = new Rect(0, 0, renderCamera.targetTexture.width, renderCamera.targetTexture.height);
         texture.ReadPixels(rect, 0, 0);
-
-        Texture2D resizeTexture = Resize(texture, 2048, 2048);
+        texture.Apply();
 
         try
         {
@@ -105,8 +120,7 @@ public class PhotoStocks : MonoBehaviour
             debug += "\nError: " + ex.ToString();
         }
 
-        RenderTexture.ReleaseTemporary(renderTexture);
-        Camera.main.targetTexture = null;
+        renderCamera.targetTexture = null;
 
         ReloadPhotos();
     }
