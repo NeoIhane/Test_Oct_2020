@@ -16,8 +16,8 @@ public class MainScene : MonoBehaviour
     
     Dictionary<string, GameObject> spawnedPrefab = new Dictionary<string, GameObject>();
     [SerializeField]
-    GameObject trackImageObj;
-    
+    TrackingImageObj trackImageObj;
+    Dictionary<string, TrackingImageObj> trackImageObjs = new Dictionary<string, TrackingImageObj>();
     //Spheres
     [SerializeField]
     PoolManager ballManager;
@@ -36,12 +36,18 @@ public class MainScene : MonoBehaviour
         if (ARSession.state == ARSessionState.Unsupported)
         {
             is_debug = true;
-            debug = "ARSession.state == ARSessionState.Unsupported";
+            debug_event = "ARSession.state == ARSessionState.Unsupported";
         }
         else
         {
             aRSession.enabled = true;
-            
+            for (int i = 0; i < trackingImageManager.referenceLibrary.count; i++)
+            {
+                TrackingImageObj track = Instantiate(trackImageObj);
+                track.SetTexture(trackingImageManager.referenceLibrary[i].texture);
+                track.SetTracking(false);
+                trackImageObjs.Add(trackingImageManager.referenceLibrary[i].name, track);
+            }
         }
 
         ballManager.InitPool(3);
@@ -68,7 +74,6 @@ public class MainScene : MonoBehaviour
                     ballManager.Swap(0.3f);
                     count = 0;
                 }
-            
             }
             else
             {
@@ -106,30 +111,63 @@ public class MainScene : MonoBehaviour
     {
         foreach(ARTrackedImage trackedImage in obj.added)
         {
-            debug_event += string.Format("\nAdd Track=> Id:{0} state:{1} name:{2}", trackedImage.trackableId, trackedImage.trackingState, trackedImage.name);
-            ballManager.RequestObject().Spawn(ballManager.RandomColor(), trackedImage.transform);
+            debug_event += String.Format("<color=blue>[ADD]<color> Image name:{0} State:{1}\nID:{2}",
+                        trackedImage.referenceImage.name,
+                        trackedImage.trackingState,
+                        trackedImage.trackableId);
+
+            TrackingImageObj trackobj;
+            if (trackImageObjs.TryGetValue(trackedImage.referenceImage.name, out trackobj))
+            {
+                trackobj.SetTracking(true);
+                ballManager.RequestObject().Spawn(ballManager.RandomColor(), trackobj.gameObject.transform);
+            }
         }
         foreach (ARTrackedImage trackedImage in obj.updated)
         {
             UpdateImage(trackedImage);
-            //debug_event += string.Format("\nUpdate Track=> Id:{0} state:{1} name:{2}", trackedImage.trackableId, trackedImage.trackingState, trackedImage.name);
         }
         foreach (ARTrackedImage trackedImage in obj.removed)
         {
-            debug_event += string.Format("\nRemove Track=> Id:{0} state:{1} name:{2}", trackedImage.trackableId, trackedImage.trackingState, trackedImage.name);
+            debug_event += String.Format("<color=red>[Removed]</color> Image name:{0} State:{1}\nID:{2}",
+                        trackedImage.referenceImage.name,
+                        trackedImage.trackingState,
+                        trackedImage.trackableId);
+
+            TrackingImageObj trackobj;
+            if (trackImageObjs.TryGetValue(trackedImage.referenceImage.name, out trackobj))
+            {
+                trackobj.SetTracking(false);
+            }
         }
     }
     void UpdateImage(ARTrackedImage trackedImage)
     {
-        debug = string.Format("\nTrack=> Id:{0} \nstate:{1} \nDestroyOnRemove:{2}", trackedImage.trackableId, trackedImage.trackingState, trackedImage.destroyOnRemoval);
-        if (trackedImage.trackingState == UnityEngine.XR.ARSubsystems.TrackingState.Tracking)
+        TrackingImageObj trackobj;
+        if (trackImageObjs.TryGetValue(trackedImage.referenceImage.name, out trackobj))
         {
-            trackedImage.transform.GetChild(0).GetComponent<Renderer>().material.SetColor("_Color", Color.white);
+            if (trackedImage.trackingState == UnityEngine.XR.ARSubsystems.TrackingState.Tracking)
+            {
+                trackobj.SetTracking(true);
+                trackobj.transform.position = trackedImage.transform.position;
+                trackobj.SetColor(Color.white);
+            }
+            else if (trackedImage.trackingState == UnityEngine.XR.ARSubsystems.TrackingState.Limited)
+            {
+                trackobj.SetTracking(false);
+                trackobj.transform.position = trackedImage.transform.position;
+                trackobj.SetColor(Color.yellow);
+            }
+            else if (trackedImage.trackingState == UnityEngine.XR.ARSubsystems.TrackingState.None)
+            {
+                trackobj.SetTracking(false);
+            }
         }
-        else
-        {
-            trackedImage.transform.GetChild(0).GetComponent<Renderer>().material.SetColor("_Color", Color.red);
-        }
+        debug = String.Format("Image name:{0} State:{1}\nID:{2}",
+                       trackedImage.referenceImage.name,
+                       trackedImage.trackingState,
+                       trackedImage.trackableId);
+
     }
     #endregion
     #region ball sphere pool

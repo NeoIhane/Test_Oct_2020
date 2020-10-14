@@ -14,7 +14,7 @@ public class Ball : MonoBehaviour
     public Color color { get; private set; }
     void Update()
     {
-        if (target != null)
+        if (IsTracking())
         {
             if (isMove)
             {
@@ -42,7 +42,11 @@ public class Ball : MonoBehaviour
     {
         gameObject.SetActive(enable);
     }
-    
+    public bool IsTracking()
+    {
+        if (target == null) return false;
+        return target.gameObject.activeSelf;
+    }
     public Transform GetTarget()
     {
         return target;
