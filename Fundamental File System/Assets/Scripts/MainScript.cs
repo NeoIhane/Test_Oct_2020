@@ -68,7 +68,7 @@ public class MainScript : MonoBehaviour
         //photoStocks.ReloadPhotos();
     }
     bool isShowFileDialogMockup = false;
-    Rect FileDialogMockupRect = new Rect(0, 0, Screen.width, (int)(Screen.height * 0.8f));
+    Rect FileDialogMockupRect = new Rect(0, 0, Screen.width, (int)(Screen.height * 0.7f));
     DirectoryInfo selectDirectory;
     DirectoryInfo parentDirectory;
     DirectoryInfo[] sameLevelDirectory;
@@ -77,8 +77,18 @@ public class MainScript : MonoBehaviour
     void GetFolderData()
     {
         parentDirectory = Directory.GetParent(selectPath);
-        sameLevelDirectory = parentDirectory.GetDirectories();
-
+        if (parentDirectory != null)
+        {
+            sameLevelDirectory = parentDirectory.GetDirectories();
+        }else
+        {
+            DriveInfo[] driveInfos = DriveInfo.GetDrives();
+            sameLevelDirectory = new DirectoryInfo[driveInfos.Length];
+            for (int i = 0; i < sameLevelDirectory.Length; i++)
+            {
+                sameLevelDirectory[i] = driveInfos[i].RootDirectory;
+            }
+        }
         string[] s = selectPath.Split('/');
 
         foreach (DirectoryInfo dir in sameLevelDirectory)
@@ -97,23 +107,30 @@ public class MainScript : MonoBehaviour
             FileDialogMockupRect = GUILayout.Window(0, FileDialogMockupRect, FileDialogMockup, "Select Folder");
         }
     }
+    Vector2 parentfolderScrollPos;
+    Vector2 samefolderScrollPos;
+    Vector2 childfolderScrollPos;
     void FileDialogMockup(int windowID)
     {
         GUILayout.Label(selectPath);
         GUILayout.BeginHorizontal();
         GUILayout.BeginVertical("box");
         GUILayout.Label("ParentFolder");
-        GUILayout.BeginScrollView(new Vector2(0, 1));
-        if (GUILayout.Button(parentDirectory.Name))
+        parentfolderScrollPos = GUILayout.BeginScrollView(parentfolderScrollPos);
+        if (parentDirectory != null)
         {
-            selectPath = parentDirectory.FullName;
-            GetFolderData();
-        }
+            if (GUILayout.Button(parentDirectory.Name))
+            {
+                selectPath = parentDirectory.FullName;
+                GetFolderData();
+            }
+        }else
+            GUILayout.Label("Computer");
         GUILayout.EndScrollView();
         GUILayout.EndVertical();
         GUILayout.BeginVertical("box");
-        GUILayout.Label("Folder");
-        GUILayout.BeginScrollView(new Vector2(0, 1));
+        GUILayout.Label("Select Folder");
+        samefolderScrollPos = GUILayout.BeginScrollView(samefolderScrollPos);
         for (int i = 0; i < sameLevelDirectory.Length; i++)
         {
             if(selectDirectory==sameLevelDirectory[i])
@@ -130,7 +147,7 @@ public class MainScript : MonoBehaviour
         GUILayout.EndVertical();
         GUILayout.BeginVertical("box");
         GUILayout.Label("SubFolder");
-        GUILayout.BeginScrollView(new Vector2(0, 1));
+        childfolderScrollPos = GUILayout.BeginScrollView(childfolderScrollPos);
         for (int i = 0; i < subDirectory.Length; i++)
         {
             if (GUILayout.Button(subDirectory[i].Name))
