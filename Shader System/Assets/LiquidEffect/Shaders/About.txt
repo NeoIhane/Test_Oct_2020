@@ -1,0 +1,6 @@
+Textures/Checker.png from:https://polycount.com/discussion/186513/free-checker-pattern-texture
+
+[References]
+https://developer.download.nvidia.com/books/HTML/gpugems/gpugems_ch38.html
+https://ssanjay.dev/2020/05/fast-fluid-dynamics.html
+https://github.com/Scrawk/GPU-GEMS-2D-Fluid-Simulation
