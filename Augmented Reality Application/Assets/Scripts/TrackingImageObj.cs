@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 public class TrackingImageObj : MonoBehaviour
 {
     [SerializeField]
@@ -10,9 +10,13 @@ public class TrackingImageObj : MonoBehaviour
     float time = 2;
     float count = 0;
     bool isTracking = false;
+
+    public Action onSpawn;
+    public Action onDespawn;
+
     public void SetTexture(Texture texture)
     {
-        renderer.material.SetTexture("_Albedo", texture);
+        renderer.material.SetTexture("_MainTex", texture);
     }
     public void SetColor(Color color)
     {
@@ -37,5 +41,13 @@ public class TrackingImageObj : MonoBehaviour
             gameObject.SetActive(isTracking);
             count = 0;
         }
+    }
+    private void OnEnable()
+    {
+        if (onSpawn != null) onSpawn();
+    }
+    private void OnDisable()
+    {
+        if (onDespawn != null) onDespawn();
     }
 }
