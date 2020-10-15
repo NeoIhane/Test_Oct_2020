@@ -71,9 +71,13 @@ public class Ball : MonoBehaviour
         count = 0;
         isMove = false;
     }
-    void SetColor(Color color)
+    public void SetColor(Color color)
     {
         sphere.GetComponent<Renderer>().material.SetColor("_Color", color);
         this.color = color;
+    }
+    public Color GetColor()
+    {
+        return sphere.GetComponent<Renderer>().material.color;
     }
 }

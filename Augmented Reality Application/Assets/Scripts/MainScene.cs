@@ -46,6 +46,8 @@ public class MainScene : MonoBehaviour
                 TrackingImageObj track = Instantiate(trackImageObj);
                 track.SetTexture(trackingImageManager.referenceLibrary[i].texture);
                 track.SetTracking(false);
+                track.onSpawn = () => { ballManager.RequestObject().Spawn(ballManager.RandomColor(), track.gameObject.transform); };
+                //track.onDespawn = () => { };
                 trackImageObjs.Add(trackingImageManager.referenceLibrary[i].name, track);
             }
         }
@@ -120,7 +122,7 @@ public class MainScene : MonoBehaviour
             if (trackImageObjs.TryGetValue(trackedImage.referenceImage.name, out trackobj))
             {
                 trackobj.SetTracking(true);
-                ballManager.RequestObject().Spawn(ballManager.RandomColor(), trackobj.gameObject.transform);
+                //ballManager.RequestObject().Spawn(ballManager.RandomColor(), trackobj.gameObject.transform);
             }
         }
         foreach (ARTrackedImage trackedImage in obj.updated)
@@ -150,13 +152,15 @@ public class MainScene : MonoBehaviour
             {
                 trackobj.SetTracking(true);
                 trackobj.transform.position = trackedImage.transform.position;
-                trackobj.SetColor(Color.white);
+                trackobj.transform.rotation = trackedImage.transform.rotation;
+                trackobj.SetColor(new Color(1,1,1,0.5f));
             }
             else if (trackedImage.trackingState == UnityEngine.XR.ARSubsystems.TrackingState.Limited)
             {
                 trackobj.SetTracking(false);
                 trackobj.transform.position = trackedImage.transform.position;
-                trackobj.SetColor(Color.yellow);
+                trackobj.transform.rotation = trackedImage.transform.rotation;
+                trackobj.SetColor(new Color(1, 0, 0, 0.5f));
             }
             else if (trackedImage.trackingState == UnityEngine.XR.ARSubsystems.TrackingState.None)
             {
@@ -230,17 +234,21 @@ public class MainScene : MonoBehaviour
             List<Color> pickedColor = new List<Color>();
             foreach (Ball ball in _objectPool)
             {
-                pickedColor.Add(ball.color);
+                //if (ball.transform.gameObject.activeSelf)
+                pickedColor.Add(ball.GetColor());
             }
 
             List<Color> randomColor = new List<Color>();
             for (int i = 0; i < colors.Length; i++)
             {
+                bool isUse = false;
                 foreach (Color color in pickedColor)
                 {
-                    if (colors[i] != color)
-                        randomColor.Add(colors[i]);
+                    if (colors[i] == color)
+                        isUse = true;
                 }
+                if (!isUse)
+                    randomColor.Add(colors[i]);
             }
             if (randomColor.Count >= 1)
             {
@@ -253,7 +261,7 @@ public class MainScene : MonoBehaviour
                 float r = UnityEngine.Random.Range(0.0f, 1.0f);
                 float g = UnityEngine.Random.Range(0.0f, 1.0f);
                 float b = UnityEngine.Random.Range(0.0f, 1.0f);
-                return new Color(r, g, b);
+                return new Color(r, g, b, 1f);
             }
         }
         public void Swap(float time)
