@@ -9,6 +9,7 @@ public class LiquidEffect : MonoBehaviour
     public float viscocity;
     public float delta_x = 0.1f;
     public float delta_t = 1.0f / 60;
+    public float bound_size = 0.1f;
 
     public Material screenMat;
     public Material advectMat;
@@ -68,7 +69,7 @@ public class LiquidEffect : MonoBehaviour
     //private void OnRenderImage(RenderTexture source, RenderTexture destination)
     //{
     //    RenderTexture pass = RenderTexture.GetTemporary(source.width, source.height);
- 
+
     //    Graphics.Blit(source, pass, screenMat);
     //    screenMat.SetTexture("_MainTex", velocityTex[0]);
     //    Graphics.Blit(pass, destination, screenMat);
@@ -76,7 +77,8 @@ public class LiquidEffect : MonoBehaviour
     //}
     private void FixedUpdate()
     {
-        RenderPass();
+        if (isStart)
+            RenderPass();
     }
     public bool isRun = false;
     float cout = 0;
@@ -90,28 +92,19 @@ public class LiquidEffect : MonoBehaviour
                 isRun = false;
 
             float i = cout / time;
-            float force = 1.5f;
+            float size = 0.1f;
 
+            float _x = i;
 
-            //ApplyImpulse(temperatureTex[0], temperatureTex[1], new Vector2(0.5f, 0.0f), 0.1f, 10);
-            ApplyImpulse(densityTex[0], densityTex[1], new Vector2(0.5f, 0.0f), 0.1f, 1);
-            //Swap(temperatureTex);
+            float _y = Random.Range(0.0f, 0.1f);
+            Dye(velocityTex[0], velocityTex[1], _x, _y, size);
+            Swap(velocityTex);
+            Dye(densityTex[0], densityTex[1], _x, _y, size);
             Swap(densityTex);
 
-            //ApplyImpulse(densityTex[0], densityTex[1], new Vector2(i, Mathf.Sin(cout)*0.1f), 0.1f, 1);
-            //Swap(densityTex);
-
-            Force(velocityTex[0], velocityTex[1], i, 0, 0.0f, -1 * force);
+            Dye(velocityTex[0], velocityTex[1], _x, 1 - _y, size);
             Swap(velocityTex);
-
-            Force(velocityTex[0], velocityTex[1], 1 - i, 1, 0.0f, 1 * force);
-            Swap(velocityTex);
-
-
-            Dye(densityTex[0], densityTex[1], i, 0, 0.1f);
-            Swap(densityTex);
-
-            Dye(densityTex[0], densityTex[1], 1 - i, 1, 0.1f);
+            Dye(densityTex[0], densityTex[1], _x, 1 - _y, size);
             Swap(densityTex);
 
 
@@ -132,44 +125,41 @@ public class LiquidEffect : MonoBehaviour
         Swap(densityTex);
 
 
-
         advectPass = velocityTex[0];
         //----------------------------------------------
-        Buoyancy(velocityTex[0], temperatureTex[0], densityTex[0], velocityTex[1]);
-        Swap(velocityTex);
+
+        //Buoyancy(velocityTex[0], temperatureTex[0], densityTex[0], velocityTex[1]);
+        //Swap(velocityTex);
 
         //ApplyImpulse(temperatureTex[0], temperatureTex[1], new Vector2(0.5f, 0.0f), 0.1f, 10);
-        //ApplyImpulse(densityTex[0], densityTex[1], new Vector2(0.5f, 0.0f), 0.1f, 1);
+        //ApplyImpulse(densityTex[0], densityTex[1], new Vector2(0.5f, 0.0f), 0.1f, 10);
         //Swap(temperatureTex);
         //Swap(densityTex);
 
-        if(isStart)
+        Force(velocityTex[0], velocityTex[1], 0.5f, 0.5f, 0.0f, 0.1f);
+
+        float f = 0.05f;
+        for (int i = 0; i < 10; i++)
+        {
+            float _x = (float)i * 0.1f;
+
+            ApplyImpulse(temperatureTex[0], temperatureTex[1], new Vector2(_x, 0.0f), 0.05f, f);
+            ApplyImpulse(densityTex[0], densityTex[1], new Vector2(_x, 0.0f), 0.05f, f);
+            Swap(temperatureTex);
+            Swap(densityTex);
+        }
+
+        //if(isStart)
         if (Input.GetMouseButton(0))
         {
             Vector2 pos = Input.mousePosition;
             float _x = pos.x / (float)densityTex[0].width;
             float _y = pos.y / (float)densityTex[0].height;
-            /*
-            Force(temperatureTex[0], temperatureTex[1], _x, _y);
-            Swap(temperatureTex);
 
-            Force(densityTex[0], densityTex[1], _x, _y);
-            Swap(densityTex);*/
-
-            //Force(velocityTex[0], velocityTex[1], _x, _y);
-            //Swap(velocityTex);
-
-            Dye(velocityTex[0], velocityTex[1], _x, _y, 0.02f);
+            Dye(velocityTex[0], velocityTex[1], _x, _y, 0.05f);
             Swap(velocityTex);
-            Dye(densityTex[0], densityTex[1], _x, _y, 0.02f);
+            Dye(densityTex[0], densityTex[1], _x, _y, 0.05f);
             Swap(densityTex);
-
-
-            //Force(velocityTex[0], velocityTex[1], _x, _y);
-            //Swap(velocityTex);
-            //Force(densityTex[0], densityTex[1], _x, _y);
-            //Swap(densityTex);
-
 
         }
 
@@ -177,7 +167,6 @@ public class LiquidEffect : MonoBehaviour
 
         //densityPass = densityTex[0];
         //-------------------------------------------------
-
 
         //divergence
         Divergence(velocityTex[0], divergenceTex);
@@ -197,29 +186,18 @@ public class LiquidEffect : MonoBehaviour
         gradientPass = velocityTex[0];
         //-------------------------------------------------
 
-        //boundary
-        Boundary(velocityTex[0], velocityTex[1]);
+        ////boundary
+        Boundary(velocityTex[0], velocityTex[1], bound_size);
         Swap(velocityTex);
-        Boundary(densityTex[0], densityTex[1]);
+        Boundary(densityTex[0], densityTex[1], bound_size);
         Swap(densityTex);
 
-        //Vorticity(velocityTex[0], velocityTex[1]);
-        //Swap(velocityTex);
-        //Vorticity(densityTex[0], densityTex[1]);
-        //Swap(densityTex);
-
+        ////Vorticity
         Vorticity(velocityTex[0], velocityTex[1]);
         Swap(velocityTex);
 
-        //Buoyancy(velocityTex[0], temperatureTex[0], densityTex[0], velocityTex[1]);
-        //Swap(velocityTex);
-
-        //Advect(densityTex[0], densityTex[1]);
-        //Swap(densityTex);
         densityPass = densityTex[0];
 
-        //Graphics.Blit(densityTex[0], destination, screenMat);
-      
         //RenderTexture.ReleaseTemporary(pass);
     }
     void Obstacle(float r, Vector2 point, RenderTexture dest)
@@ -240,7 +218,7 @@ public class LiquidEffect : MonoBehaviour
         impluseMat.SetFloat("_Fill", val);
         impluseMat.SetTexture("_Source", source);
 
-        Graphics.Blit(null, dest,  impluseMat);
+        Graphics.Blit(null, dest, impluseMat);
     }
     void Dye(RenderTexture source, RenderTexture dest, float x, float y, float size)
     {
@@ -249,9 +227,10 @@ public class LiquidEffect : MonoBehaviour
         dyeMat.SetFloat("_rho", size);
         Graphics.Blit(null, dest, dyeMat);
     }
-    void Boundary(RenderTexture source, RenderTexture dest)
+    void Boundary(RenderTexture source, RenderTexture dest, float _offset)
     {
         boundaryMat.SetTexture("_x", source);
+        boundaryMat.SetFloat("_dx", _offset);
         Graphics.Blit(null, dest, boundaryMat);
     }
     void GradienSubtract(RenderTexture p, RenderTexture v, RenderTexture dest)
@@ -262,14 +241,14 @@ public class LiquidEffect : MonoBehaviour
     }
     void Jacobi(RenderTexture p, RenderTexture d, RenderTexture dest)
     {
-        //float alpha = Mathf.Pow(delta_x, 2) / viscocity * delta_t;
-        //float rbeta = 1.0f / (4.0f + alpha);
+        float alpha = Mathf.Pow(delta_x, 2) / viscocity * delta_t;
+        float rbeta = 1.0f / (4.0f + alpha);
 
         jacobiMat.SetTexture("_x", p);
         jacobiMat.SetTexture("_b", d);
-        //jacobiMat.SetFloat("_dx", delta_x);
-        //jacobiMat.SetFloat("_alpha", alpha);
-        //jacobiMat.SetFloat("_rbeta", rbeta);
+        jacobiMat.SetFloat("_dx", delta_x);
+        jacobiMat.SetFloat("_alpha", alpha);
+        jacobiMat.SetFloat("_rbeta", rbeta);
         Graphics.Blit(null, dest, jacobiMat);
     }
     void Divergence(RenderTexture source, RenderTexture dest)
@@ -343,7 +322,7 @@ public class LiquidEffect : MonoBehaviour
             {
                 isStart = true;
                 isRun = true;
-                
+
             }
 
     }

@@ -48,7 +48,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _dt: 0.01
+    - _dt: 0.02
     - _dx: 0.2
     - delta_t: -0.91
     - delta_x: 0.1

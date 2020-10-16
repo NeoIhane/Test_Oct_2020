@@ -27,6 +27,6 @@ Material:
     - _dt: 0.09
     - _rho: 0.02
     m_Colors:
-    - _color: {r: 1, g: 1, b: 1, a: 1}
-    - _impulse_pos: {r: 0.57923496, g: 0.55528253, b: 0, a: 0}
+    - _color: {r: 1, g: 1, b: 1, a: 0}
+    - _impulse_pos: {r: 0.8595601, g: 0.6745283, b: 0, a: 0}
   m_BuildTextureStacks: []

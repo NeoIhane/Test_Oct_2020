@@ -26,6 +26,6 @@ Material:
     m_Floats:
     - _dt: 0.05
     - _dx: 0.02
-    - _vorticity: 30
+    - _vorticity: 35
     m_Colors: []
   m_BuildTextureStacks: []
