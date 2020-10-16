@@ -1,4 +1,4 @@
-﻿Shader "LiquidEffect/Layers/GradientSubtraction"
+﻿Shader "LiquidEffect/GradientSubtraction"
 {
     Properties
     {

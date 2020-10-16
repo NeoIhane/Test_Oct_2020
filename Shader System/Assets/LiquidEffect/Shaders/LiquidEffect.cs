@@ -20,9 +20,7 @@ public class LiquidEffect : MonoBehaviour
     public Material gradientSubtractionMat;
     public Material boundaryMat;
     public Material vorticityMat;
-    public Material flowMat;
     public Material impluseMat;
-    public Material obstacleMat;
 
     RenderTexture[] pressureTex;
     RenderTexture[] velocityTex;
@@ -44,7 +42,7 @@ public class LiquidEffect : MonoBehaviour
         densityPass = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
         gradientPass = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
 
-        pressureTex = new RenderTexture[2];//RenderTexture.GetTemporary(source.width, source.height);
+        pressureTex = new RenderTexture[2];
         pressureTex[0] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat);
         pressureTex[1] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat);
 
@@ -66,15 +64,7 @@ public class LiquidEffect : MonoBehaviour
         //Graphics.Blit(null, velocityTex[0], screenMat);
 
     }
-    //private void OnRenderImage(RenderTexture source, RenderTexture destination)
-    //{
-    //    RenderTexture pass = RenderTexture.GetTemporary(source.width, source.height);
 
-    //    Graphics.Blit(source, pass, screenMat);
-    //    screenMat.SetTexture("_MainTex", velocityTex[0]);
-    //    Graphics.Blit(pass, destination, screenMat);
-    //    RenderTexture.ReleaseTemporary(pass);
-    //}
     private void FixedUpdate()
     {
         if (isStart)
@@ -128,17 +118,9 @@ public class LiquidEffect : MonoBehaviour
         advectPass = velocityTex[0];
         //----------------------------------------------
 
-        //Buoyancy(velocityTex[0], temperatureTex[0], densityTex[0], velocityTex[1]);
-        //Swap(velocityTex);
-
-        //ApplyImpulse(temperatureTex[0], temperatureTex[1], new Vector2(0.5f, 0.0f), 0.1f, 10);
-        //ApplyImpulse(densityTex[0], densityTex[1], new Vector2(0.5f, 0.0f), 0.1f, 10);
-        //Swap(temperatureTex);
-        //Swap(densityTex);
-
         Force(velocityTex[0], velocityTex[1], 0.5f, 0.5f, 0.0f, 0.1f);
 
-        float f = 0.05f;
+        float f = 0.01f;
         for (int i = 0; i < 10; i++)
         {
             float _x = (float)i * 0.1f;
@@ -165,7 +147,6 @@ public class LiquidEffect : MonoBehaviour
 
         StartRun();
 
-        //densityPass = densityTex[0];
         //-------------------------------------------------
 
         //divergence
@@ -182,8 +163,9 @@ public class LiquidEffect : MonoBehaviour
 
         //gradient
         GradienSubtract(pressureTex[0], velocityTex[0], velocityTex[1]);
+        GradienSubtract(pressureTex[0], velocityTex[0], gradientPass);//debug
         Swap(velocityTex);
-        gradientPass = velocityTex[0];
+
         //-------------------------------------------------
 
         ////boundary
@@ -199,12 +181,6 @@ public class LiquidEffect : MonoBehaviour
         densityPass = densityTex[0];
 
         //RenderTexture.ReleaseTemporary(pass);
-    }
-    void Obstacle(float r, Vector2 point, RenderTexture dest)
-    {
-        obstacleMat.SetFloat("_Radius", r);
-        obstacleMat.SetVector("_Point", point);
-        Graphics.Blit(null, dest, obstacleMat);
     }
     void Vorticity(RenderTexture source, RenderTexture dest)
     {
@@ -262,17 +238,6 @@ public class LiquidEffect : MonoBehaviour
         advectMat.SetTexture("_x", colorField);
         Graphics.Blit(null, dest, advectMat);
     }
-    void Buoyancy(RenderTexture v, RenderTexture t, RenderTexture d, RenderTexture dest)
-    {
-        flowMat.SetTexture("_Velocity", v);
-        flowMat.SetTexture("_Temperature", t);
-        flowMat.SetTexture("_Density", d);
-        flowMat.SetFloat("_AmbientTemperature", 0);
-        flowMat.SetFloat("_TimeStep", 0.25f);
-        flowMat.SetFloat("_Sigma", 1);
-        flowMat.SetFloat("_Kappa", 0.05f);
-        Graphics.Blit(null, dest, flowMat);
-    }
     void Force(RenderTexture source, RenderTexture dest, float x, float y, float forcex, float forcey)
     {
         forceMat.SetTexture("_v", source);
@@ -305,18 +270,21 @@ public class LiquidEffect : MonoBehaviour
         GL.Clear(false, true, new Color(0, 0, 0, 0));
         Graphics.SetRenderTarget(null);
     }
+    public bool isDebug = false;
     private void OnGUI()
     {
         GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), densityPass);
-        //GUI.DrawTexture(new Rect(0, 0, 100, 100), advectPass);
-        //GUI.DrawTexture(new Rect(0, 100, 100, 100), divergencePass);
-        //GUI.DrawTexture(new Rect(0, 200, 100, 100), gradientPass);
-        //GUI.DrawTexture(new Rect(0, 300, 100, 100), densityPass);
-        //GUI.Label(new Rect(0, 0, 100, 100), "advect");
-        //GUI.Label(new Rect(0, 100, 100, 100), "divergence");
-        //GUI.Label(new Rect(0, 200, 100, 100), "gradient");
-        //GUI.Label(new Rect(0, 300, 100, 100), "density");
-
+        if (isDebug)
+        {
+            GUI.DrawTexture(new Rect(0, 0, 100, 100), advectPass);
+            GUI.DrawTexture(new Rect(0, 100, 100, 100), divergencePass);
+            GUI.DrawTexture(new Rect(0, 200, 100, 100), gradientPass);
+            GUI.DrawTexture(new Rect(0, 300, 100, 100), densityPass);
+            GUI.Label(new Rect(0, 0, 100, 100), "advect");
+            GUI.Label(new Rect(0, 100, 100, 100), "divergence");
+            GUI.Label(new Rect(0, 200, 100, 100), "gradient");
+            GUI.Label(new Rect(0, 300, 100, 100), "density");
+        }
         if (!isStart)
             if (GUI.Button(new Rect(0, 0, Screen.width, Screen.height), "Play"))
             {

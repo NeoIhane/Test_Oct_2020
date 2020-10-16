@@ -1,4 +1,4 @@
-﻿Shader "LiquidEffect/Layers/Advect"
+﻿Shader "LiquidEffect/Advect"
 {
     Properties
     {

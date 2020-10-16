@@ -249,6 +249,7 @@ MonoBehaviour:
   viscocity: 10
   delta_x: 0.1
   delta_t: 0.1
+  bound_size: 0.001
   screenMat: {fileID: 2100000, guid: 0212d9f2fbbad224a97cc542d3fc4069, type: 2}
   advectMat: {fileID: 2100000, guid: 02eb2c61f401f4d4aadb5f85ea1f7621, type: 2}
   dyeMat: {fileID: 2100000, guid: dc34a9faaeb92514d9bb94900bbc33e6, type: 2}
@@ -258,11 +259,10 @@ MonoBehaviour:
   gradientSubtractionMat: {fileID: 2100000, guid: ead80911010a1cc4cba38e212b621a2c, type: 2}
   boundaryMat: {fileID: 2100000, guid: d1594eae1632cca4f9276cd8f1038029, type: 2}
   vorticityMat: {fileID: 2100000, guid: e5c6b08d439b4ec42be2a0bf406ec58a, type: 2}
-  flowMat: {fileID: 2100000, guid: 7b77d684c1bc2f84e951e556d0c91ca2, type: 2}
   impluseMat: {fileID: 2100000, guid: c53f6e6b9374fe644bbb00cc6e17d114, type: 2}
-  obstacleMat: {fileID: 2100000, guid: 3412af34ec2cf7243b13b65626fdd125, type: 2}
   isStart: 0
   isRun: 0
+  isDebug: 0
 --- !u!81 &589043830
 AudioListener:
   m_ObjectHideFlags: 0
