@@ -2,8 +2,8 @@
 {
     Properties
     {
-        _x ("x vector: _x", 2D) = "white" {}
-        _b("b vector: _b", 2D) = "white" {}
+        _x ("Pressure: _x", 2D) = "white" {}
+        _b("Divergence: _b", 2D) = "white" {}
         _dx("dx: _dx", Float) = 0.5
         _alpha("alpha: _alpha", Float) = 0.5
         _rbeta("reciprocal beta: _rbeta", Float) = 0.5
